@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">ShowMyExerciseApp</string>
+    <string name="btn_back">&#60; back</string>
+    <string name="fName"></string>
+    <string name="lName"></string>
+    <string name="email"></string>
+    <string name="password"></string>
+    <string name="confirm_password"></string>
+    <string name="workout_result">You have done ?? minuets Exercise</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
