@@ -15,19 +15,38 @@
             android:id="@+id/upload_image"
             android:layout_width="match_parent"
             android:layout_height="250dp"
-            android:layout_marginTop="100dp"
+            android:layout_marginTop="24dp"
             android:scaleType="centerInside"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:src="@drawable/baseline_cloud_upload_24" />
+            tools:src="@drawable/baseline_add_a_photo_24" />
 
         <Button
-            android:id="@+id/upload_btn"
+            android:id="@+id/post_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="100dp"
-            android:text="Upload"
+            android:layout_marginBottom="48dp"
+            android:text="Post"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <EditText
+            android:id="@+id/etPostText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:ems="10"
+            android:hint="Share your exercise..."
+            android:inputType="textMultiLine"
+            android:maxLength="250"
+            android:minHeight="48dp"
+            android:text=""
+            android:textColor="@color/white"
+            android:textColorHint="@color/gray"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/upload_image" />

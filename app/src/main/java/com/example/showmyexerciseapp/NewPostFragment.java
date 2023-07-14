@@ -2,7 +2,9 @@ package com.example.showmyexerciseapp;
 
 import static android.app.Activity.RESULT_OK;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -14,14 +16,15 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 
-import android.provider.MediaStore;
-import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -30,11 +33,15 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.util.UUID;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -49,8 +56,13 @@ public class NewPostFragment extends Fragment {
     private String mParam1;
     private String mParam2;
 
+    TextView etPostText;
     ImageView uploadedImage;
-    Button uploadBtn;
+    Button postBtn;
+    Uri imageUri;
+    FirebaseStorage firebaseStorage;
+    StorageReference storageReference;
+    ActivityResultLauncher<Intent> activityResultLauncher;
 
     public NewPostFragment() {
         // Required empty public constructor
@@ -90,98 +102,133 @@ public class NewPostFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_new_post, container, false);
     }
 
-
-    Bitmap bitmap;
-
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        etPostText = view.findViewById(R.id.etPostText);
         uploadedImage = view.findViewById(R.id.upload_image);
-        uploadBtn = view.findViewById(R.id.upload_btn);
-
-        ActivityResultLauncher<Intent> activityResultLauncher;
-
-        uploadedImage.setImageResource(R.drawable.baseline_cloud_upload_24);
-
-        activityResultLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
-                    @Override
-                    public void onActivityResult(ActivityResult result) {
-                        if(result.getResultCode() == RESULT_OK) {
-                            Intent data = result.getData();
-                            Uri uri = data.getData();
-                            try {
-                                // getActivity().getContentResolver()
-                                // getContext().getContentResolver()
-                                bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), uri);
-                                uploadedImage.setImageBitmap(bitmap);
-                            } catch (IOException e) {
-                                Toast.makeText(getContext(), "onActivityResult", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    }
-                });
-
+        postBtn = view.findViewById(R.id.post_btn);
+        uploadedImage.setImageResource(R.drawable.baseline_add_a_photo_24);
 
         uploadedImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_PICK);
-                intent.setData(MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                activityResultLauncher.launch(intent);
+                // navigate to image selection display
+                choosePicture();
             }
         });
 
-        uploadBtn.setOnClickListener(new View.OnClickListener() {
+        // code used for opening photo selection display
+        // called in chooseImage()
+        activityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>() {
+                @Override
+                public void onActivityResult(ActivityResult result) {
+                    // if image is chosen, RESULT_OK
+                    if(result.getResultCode() == RESULT_OK) {
+                        Intent data = result.getData();
+                        imageUri = data.getData();
+                        uploadedImage.setImageURI(imageUri);
+                    } else {
+                        Toast.makeText(getContext(), "Image not selected", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        );
+
+
+        postBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ByteArrayOutputStream byteArrayOutputStream;
-                byteArrayOutputStream = new ByteArrayOutputStream();
-                if(bitmap != null) {
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
-                    byte[] bytes = byteArrayOutputStream.toByteArray();
-                    final String base64Image = Base64.encodeToString(bytes, Base64.DEFAULT);
 
-                    // POST request
-                    String url = "http://10.0.2.2:3000/api/admin/post-table";
+                Post post = new Post();
+                // set post data
+                SharedPreferences sharedPreferences = getContext().getSharedPreferences("config_file", Context.MODE_PRIVATE);
+                post.setAuthorId(sharedPreferences.getInt("userId", -1));
+                post.setText(etPostText.getText().toString());
 
-                    JSONObject json = new JSONObject();
-                    try{
-                        json.put("image", base64Image);
-                    } catch (Exception e){
-                        Toast.makeText(getContext(), "JSONObject", Toast.LENGTH_SHORT).show();
-                    }
+                // if an image is set, store to firebase storage
+                if(imageUri != null) {
+                    // set image
+                    post.setImageUrl(UUID.randomUUID().toString());
 
-                    JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, json,
-                        new Response.Listener<JSONObject>() {
+                    // init firebase connection setting
+                    firebaseStorage = FirebaseStorage.getInstance();
+                    storageReference = firebaseStorage.getReference();
+
+                    // set mata data to send request
+                    StorageReference imageRef = storageReference.child("images/" + post.getImageUrl());
+                    imageRef.putFile(imageUri)
+                        .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                             @Override
-                            public void onResponse(JSONObject response) {
-                                if(response.equals("success")) {
-                                    Toast.makeText(getContext(), "Image uploaded", Toast.LENGTH_SHORT).show();
-                                } else {
-                                    Toast.makeText(getContext(), "failed", Toast.LENGTH_SHORT).show();
-                                }
+                            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                Toast.makeText(getContext(), "success", Toast.LENGTH_SHORT).show();
                             }
-                        },
-                        new Response.ErrorListener() {
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
                             @Override
-                            public void onErrorResponse(VolleyError error) {
-
-                                Toast.makeText(getContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+                            public void onFailure(@NonNull Exception e) {
+                                Toast.makeText(getContext(), "error", Toast.LENGTH_SHORT).show();
                             }
                         });
-
-                    // create request queue and add request to the queue
-                    RequestQueue requestQueue = Volley.newRequestQueue(getContext());
-                    requestQueue.add(jsonObjectRequest);
-                } else {
-                    Toast.makeText(getContext(), "Image not selected", Toast.LENGTH_SHORT).show();
-
+                } else if(post.getText().equals("")) {
+                    // process end due to no input
+                    Toast.makeText(getContext(), "text or image is required", Toast.LENGTH_SHORT).show();
+                    return;
                 }
+                // save post data as json object
+                JSONObject json = new JSONObject();
+                try {
+                    json.put("authorId", post.getAuthorId());
+                    json.put("imageUrl", post.getImageUrl());
+                    json.put("text", post.getText());
+                } catch (Exception e) {
+                    Log.e("create JSONObject", "" + e.getMessage());
+                }
+
+                // create http request
+                final String url = "http://10.0.2.2:3000/api/admin/post-table";
+                JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, json,
+                    new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            Toast.makeText(getContext(), "onResponse: posted", Toast.LENGTH_SHORT).show();
+                        }
+                    },
+                    new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            Toast.makeText(getContext(), "onErrorResponse: error", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                );
+
+                // execute the request
+                RequestQueue requestQueue = Volley.newRequestQueue(getContext());
+                requestQueue.add(jsonObjectRequest);
+                Toast.makeText(getContext(), "Posted", Toast.LENGTH_SHORT).show();
+                navigateToMainFragment();
             }
         });
     }
 
+    private void choosePicture() {
+        // navigate to image selection display
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        activityResultLauncher.launch(intent);
+    };
 
+    private void navigateToMainFragment() {
+        // navigate to Workout Result Fragment
+        ((FragmentActivity) getContext())
+            .getSupportFragmentManager()
+            .beginTransaction()
+            .replace(R.id.frame_layout, new MainFragment())
+            .addToBackStack(null)
+            .commit();
+    }
 }
