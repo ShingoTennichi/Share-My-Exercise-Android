@@ -22,7 +22,12 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField "String", "BASE_URL", "\"http://10.0.2.2:3000\""
+            // etc.
+        }
         release {
+            buildConfigField "String", "BASE_URL", "\"https://share-my-exercise-backend.vercel.app\""
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
