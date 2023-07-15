@@ -100,6 +100,7 @@
             android:layout_marginBottom="16dp"
             android:text="Time"
             android:textColor="@color/white"
+            android:visibility="invisible"
             app:layout_constraintBottom_toTopOf="@+id/start_exercise_btn"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />

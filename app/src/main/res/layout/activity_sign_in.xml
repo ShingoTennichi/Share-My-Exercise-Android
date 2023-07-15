@@ -66,7 +66,6 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:background="@color/none"
-        android:onClick="navigateToGetStartedActivity"
         android:text="@string/btn_back"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

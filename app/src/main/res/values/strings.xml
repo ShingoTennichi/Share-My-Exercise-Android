@@ -6,7 +6,7 @@
     <string name="email"></string>
     <string name="password"></string>
     <string name="confirm_password"></string>
-    <string name="workout_result">You have done ?? minuets Exercise</string>
+    <string name="workout_result">You have done %1$d minuets Exercise</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
