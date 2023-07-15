@@ -1,4 +1,4 @@
-package com.example.showmyexerciseapp;
+package Components;
 
 public class Exercise {
     private int id;

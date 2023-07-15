@@ -3,11 +3,11 @@ package com.example.showmyexerciseapp;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,10 +20,14 @@ import com.android.volley.toolbox.Volley;
 
 import org.json.JSONObject;
 
+import Components.Navigate;
+import Components.Validation;
+
 public class SignInActivity extends AppCompatActivity {
 
     TextView textInputEmail;
     TextView textInputPassword;
+    Button backBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,25 +36,32 @@ public class SignInActivity extends AppCompatActivity {
 
         textInputEmail = findViewById(R.id.sgin_in_email);
         textInputPassword = findViewById(R.id.sign_in_password);
+        backBtn = findViewById(R.id.btn_back_SI);
+
+        backBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Navigate.navigateToNextActivity(SignInActivity.this, GetStartedActivity.class);
+                finish();
+            }
+        });
     }
 
-    public void SignIn(View v) throws Exception {
-
+    public void SignIn(View v) {
+        Toast.makeText(SignInActivity.this, "Logging in...", Toast.LENGTH_SHORT).show();
         String email = textInputEmail.getText().toString();
         String password = textInputPassword.getText().toString();
-        Log.i("userInput", email);
-        Log.i("userInput", password);
+
         // check input
         if(!Validation.isValidSignInInput(email, password)) {
-            Toast toast = Toast.makeText(SignInActivity.this, "Fill all input areas", Toast.LENGTH_SHORT);
-            toast.show();
+            Toast.makeText(SignInActivity.this, "Fill all input areas", Toast.LENGTH_SHORT).show();
             return;
         };
 
-
-        // for testing
-        String url = "http://10.0.2.2:3000/api/user/sign-in";
-        //String url = "https://share-my-exercise-backend.vercel.app/api/user/sign-in";
+        // HTTP request
+        // make sure Build Variant is debug or release
+        String requestPath = "/api/user/sign-in";
+        String url = BuildConfig.BASE_URL + requestPath;
 
         // create a json object for request body
         JSONObject json = new JSONObject();
@@ -79,15 +90,12 @@ public class SignInActivity extends AppCompatActivity {
                         int userId = result.getInt("id");
                         saveUserId(userId);
 
-                        Toast toast = Toast.makeText(SignInActivity.this, "Logging in...", Toast.LENGTH_SHORT);
-                        toast.show();
-
                         // navigate to main activity
-                        navigateToMainActivity();
+                        Navigate.navigateToNextActivity(SignInActivity.this, MainActivity.class);
+                        finish();
                     } catch (Exception e) {
-                        Log.e("onResponse", e.getMessage());
-                        Toast toast = Toast.makeText(SignInActivity.this, e.getMessage(), Toast.LENGTH_SHORT);
-                        toast.show();
+                        Log.e("onResponse", "" + e.getMessage());
+                        Toast.makeText(SignInActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 }
             },
@@ -95,28 +103,17 @@ public class SignInActivity extends AppCompatActivity {
                 @Override
                 public void onErrorResponse(VolleyError error) {
                     // show error source by toast
-                    Log.e("onErrorResponse", error.getMessage());
-                    Toast toast = Toast.makeText(SignInActivity.this, "", Toast.LENGTH_SHORT);
-                    toast.show();
+                    Log.e("onErrorResponse", ""+error.getMessage());
+                    Toast.makeText(SignInActivity.this, error.getMessage(), Toast.LENGTH_SHORT).show();
+
                 }
             }
         );
 
-        // create request queue
+        // create request queue and add request to the queue
         RequestQueue requestQueue = Volley.newRequestQueue(SignInActivity.this);
-        // add http request to the request queue
         // execute the queue
         requestQueue.add(jsonObjectRequest);
-    }
-
-    private void navigateToMainActivity() {
-        Intent intent = new Intent(SignInActivity.this, MainActivity.class);
-        startActivity(intent);
-    }
-
-    public void navigateToGetStartedActivity(View v) {
-        Intent intent = new Intent(SignInActivity.this, GetStartedActivity.class);
-        startActivity(intent);
     }
 
     private void saveUserId(int userId) {

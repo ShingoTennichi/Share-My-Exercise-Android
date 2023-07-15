@@ -3,11 +3,11 @@ package com.example.showmyexerciseapp;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,7 +20,8 @@ import com.android.volley.toolbox.Volley;
 
 import org.json.JSONObject;
 
-
+import Components.Navigate;
+import Components.Validation;
 
 public class SignUpActivity extends AppCompatActivity {
 
@@ -29,6 +30,7 @@ public class SignUpActivity extends AppCompatActivity {
     TextView textInputEmail;
     TextView textInputPassword;
     TextView textInputConfirmPassword;
+    Button backBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,17 +42,15 @@ public class SignUpActivity extends AppCompatActivity {
         textInputEmail = findViewById(R.id.email);
         textInputPassword = findViewById(R.id.password);
         textInputConfirmPassword = findViewById(R.id.confirm_password);
-    }
-    private void navigateToMainActivity() {
-        // navigate to main activity after successfully create user account
-        Intent intent = new Intent(SignUpActivity.this, MainActivity.class);
-        startActivity(intent);
-    }
+        backBtn = findViewById(R.id.btn_back_SU);
 
-    public void navigateToGetStarted(View v) {
-        // for back button
-        Intent intent = new Intent(SignUpActivity.this, GetStartedActivity.class);
-        startActivity(intent);
+        backBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Navigate.navigateToNextActivity(SignUpActivity.this, GetStartedActivity.class);
+                finish();
+            }
+        });
     }
 
     public void createAccount(View v) throws Exception {
@@ -67,7 +67,7 @@ public class SignUpActivity extends AppCompatActivity {
                 // connect to db to create account
                 postUserData(fName,lName,email,password);
             } else {
-                throw new Exception("invalid input");
+                throw new Exception("Fill all areas and make sure password");
             }
         } catch(Exception e) {
             Log.e("createAccount", e.getMessage());
@@ -77,9 +77,9 @@ public class SignUpActivity extends AppCompatActivity {
 
     public void postUserData(String fName, String lName, String email, String password) throws Exception {
 
-        // for testing
-        String url = "http://10.0.2.2:3000/api/user/sign-up";
-        //String url = "https://share-my-exercise-backend.vercel.app/api/user/sign-up";
+        // make sure Build Variant is debug or release
+        String requestPath = "/api/user/sign-up";
+        String url = BuildConfig.BASE_URL + requestPath;
 
         // create a json object for request body
         JSONObject json = new JSONObject();
@@ -112,11 +112,11 @@ public class SignUpActivity extends AppCompatActivity {
                         saveUserId(userId);
 
                         // navigate to main activity
-                        navigateToMainActivity();
+                        Navigate.navigateToNextActivity(SignUpActivity.this, MainActivity.class);
+                        Toast.makeText(SignUpActivity.this, "Successfully signed up", Toast.LENGTH_SHORT);
                     } catch (Exception e) {
                         Log.e("onResponse: ", e.getMessage());
-                        Toast toast = Toast.makeText(SignUpActivity.this, e.getMessage(), Toast.LENGTH_SHORT);
-                        toast.show();
+                        Toast.makeText(SignUpActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 }
             },
@@ -125,14 +125,13 @@ public class SignUpActivity extends AppCompatActivity {
                 public void onErrorResponse(VolleyError error) {
                     // show error source by toast
                     Log.e("onErrorResponse", error.getMessage());
-                    Toast toast = Toast.makeText(SignUpActivity.this, error.getMessage(), Toast.LENGTH_SHORT);
+                    Toast.makeText(SignUpActivity.this, error.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             }
         );
 
-        // create request queue
+        // create request queue and add http request to the request queue
         RequestQueue requestQueue = Volley.newRequestQueue(SignUpActivity.this);
-        // add http request to the request queue
         // execute the queue
         requestQueue.add(jsonObjectRequest);
     }

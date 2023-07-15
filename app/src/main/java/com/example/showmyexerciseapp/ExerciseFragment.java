@@ -1,39 +1,24 @@
 package com.example.showmyexerciseapp;
 
-import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Date;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link ExerciseFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import Components.Activity;
+
 public class ExerciseFragment extends Fragment {
-
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    private String mParam1;
-    private String mParam2;
 
     ImageView image;
     TextView name;
@@ -42,40 +27,15 @@ public class ExerciseFragment extends Fragment {
     Button startBtn;
     Button doneBtn;
     Button pauseBtn;
-
     Activity activity;
-    LocalDateTime startTime;
-    int totalTime = 0;
 
     public ExerciseFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment ExerciseFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static ExerciseFragment newInstance(String param1, String param2) {
-        ExerciseFragment fragment = new ExerciseFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
     }
 
     @Override
@@ -99,10 +59,11 @@ public class ExerciseFragment extends Fragment {
         // get values from previous activity
         Bundle bundle = getArguments();
 
-        activity = new Activity(bundle.getInt("id"), bundle.getString("name"));
+        // init activity for user activity
+        activity = new Activity(bundle.getInt("id"));
 
         image.setImageResource(bundle.getInt("image"));
-        name.setText(activity.getName());
+        name.setText(bundle.getString("name"));
         instruction.setText(bundle.getString("instruction"));
 
         startBtn.setOnClickListener(new View.OnClickListener() {
@@ -118,6 +79,7 @@ public class ExerciseFragment extends Fragment {
                 startExercise();
             }
         });
+
         doneBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -126,6 +88,7 @@ public class ExerciseFragment extends Fragment {
                 endExerciseTime();
             }
         });
+
         pauseBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -147,16 +110,13 @@ public class ExerciseFragment extends Fragment {
         if(activity.getStartedAt() == null) {
             activity.initActivityTime(LocalDateTime.now());
             time.setText(activity.getStartedAt().toString());
+            time.setVisibility(View.VISIBLE);
         } else {
             activity.setRestartedAt(LocalDateTime.now());
         }
     }
 
     private void pauseExercise() {
-        // testing
-        //LocalDateTime sixMinutesAhead = startTime.plusDays(6);
-        //Duration duration = Duration.between(startTime, sixMinutesAhead);
-
         // save workout time
         Duration duration = Duration.between(activity.getRestartedAt(), LocalDateTime.now());
         int diff = (int) Math.abs(duration.toMinutes());
@@ -171,28 +131,6 @@ public class ExerciseFragment extends Fragment {
         activity.setDuration(activity.getDuration() + diff);
 
         // record exercise data
-        try {
-            activity.saveActivityData(getContext());
-        } catch (Exception e) {
-            Log.e("endExerciseTime", e.getMessage());
-            Toast toast = Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT);
-            toast.show();
-            return;
-        }
-
-
-        // bundle activity data to pass next activity
-        Bundle bundle = new Bundle();
-        bundle.putInt("time", activity.getDuration());
-        WorkResultFragment workResultFragment = new WorkResultFragment();
-        workResultFragment.setArguments(bundle);
-
-        // navigate to Workout Result Fragment
-        ((FragmentActivity) getContext())
-            .getSupportFragmentManager()
-            .beginTransaction()
-            .replace(R.id.frame_layout, workResultFragment)
-            .addToBackStack(null)
-            .commit();
+        activity.saveActivity(getContext());
     }
 }

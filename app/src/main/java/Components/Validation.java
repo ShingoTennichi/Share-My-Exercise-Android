@@ -1,4 +1,4 @@
-package com.example.showmyexerciseapp;
+package Components;
 
 public class Validation {
     public static boolean signUpValidation(String fName, String lName, String email, String password, String confirmPassword) {

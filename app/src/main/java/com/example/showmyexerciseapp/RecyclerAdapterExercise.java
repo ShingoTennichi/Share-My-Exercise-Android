@@ -11,10 +11,12 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 
-import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
+
+import Components.Exercise;
+import Components.Navigate;
 
 public class RecyclerAdapterExercise extends RecyclerView.Adapter<RecyclerAdapterExercise.ViewHolder> {
 
@@ -28,37 +30,35 @@ public class RecyclerAdapterExercise extends RecyclerView.Adapter<RecyclerAdapte
 
     @NonNull
     @Override
-    public RecyclerAdapterExercise.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.main_exercise_layout, parent, false);
+    public RecyclerAdapterExercise.ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType) {
+        View view = LayoutInflater.from(context)
+            .inflate(R.layout.main_exercise_layout, viewGroup, false);
         ViewHolder viewHolder = new ViewHolder(view);
         return viewHolder;
     }
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerAdapterExercise.ViewHolder holder, int position) {
+        // retrieve Exercise object from ArrayList
         Exercise exercise = exercises.get(position);
+
         holder.itemImage.setImageResource(exercise.getImageSmall());
         holder.itemName.setText(exercise.getName());
         holder.cardView.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
+                // pass exercise info to the next fragment
                 Bundle bundle = new Bundle();
                 bundle.putInt("id", exercise.getId());
                 bundle.putInt("image", exercise.getImageLarge());
                 bundle.putString("name", exercise.getName());
                 bundle.putString("instruction", exercise.getInstruction());
-
                 ExerciseFragment exerciseFragment = new ExerciseFragment();
                 exerciseFragment.setArguments(bundle);
 
-                ((FragmentActivity) context)
-                    .getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.frame_layout, exerciseFragment).addToBackStack(null)
-                    .commit();
-
+                // navigate to Exercise Fragment
+                Navigate.navigateToNextFragment(context, exerciseFragment);
             }
         });
     }

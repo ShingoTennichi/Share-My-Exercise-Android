@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 
+import Components.Navigate;
+
 public class LaunchingScreenActivity extends AppCompatActivity {
 
     @Override
@@ -16,8 +18,7 @@ public class LaunchingScreenActivity extends AppCompatActivity {
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                Intent intent = new Intent(LaunchingScreenActivity.this, GetStartedActivity.class);
-                startActivity(intent);
+                Navigate.navigateToNextActivity(LaunchingScreenActivity.this, GetStartedActivity.class);
                 finish();
             }
         },3000);

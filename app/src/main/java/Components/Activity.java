@@ -1,7 +1,8 @@
-package com.example.showmyexerciseapp;
+package Components;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -11,31 +12,27 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.example.showmyexerciseapp.BuildConfig;
+import com.example.showmyexerciseapp.WorkoutResultFragment;
 
 import org.json.JSONObject;
 
 import java.time.LocalDateTime;
 
-public class Activity {
+public class Activity implements SaveActivityInterface {
 
     private int id;
-    private String name;
     private LocalDateTime startedAt;
     private LocalDateTime restartedAt;
     private LocalDateTime finishedAt;
     private int duration;
 
-    public Activity(int id, String name) {
+    public Activity(int id) {
         this.id = id;
-        this.name = name;
     }
 
     public int getId() {
         return id;
-    }
-
-    public String getName() {
-        return name;
     }
 
     public LocalDateTime getStartedAt() {
@@ -58,10 +55,6 @@ public class Activity {
         this.id = id;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public void setStartedAt(LocalDateTime startedAt) {
         this.startedAt = startedAt;
     }
@@ -79,44 +72,61 @@ public class Activity {
     }
 
     public void initActivityTime(LocalDateTime startedAt) {
-
         this.startedAt = startedAt;
         this.restartedAt = this.startedAt;
         duration = 0;
     }
 
-    public void saveActivityData(Context context) throws Exception {
-        SharedPreferences sharedPreferences = context.getSharedPreferences("config_file", Context.MODE_PRIVATE);
-        int userId = sharedPreferences.getInt("userId", -1);
+    public void saveActivity(Context context) {
+
+        // make sure Build Variant is debug or release
+        String requestPath = "/api/activity/save-activity";
+        String url = BuildConfig.BASE_URL + requestPath;
+
+        // create a json object for request body
         JSONObject json = new JSONObject();
         try {
-
+            SharedPreferences sharedPreferences = context.getSharedPreferences("config_file", Context.MODE_PRIVATE);
+            int userId = sharedPreferences.getInt("userId", -1);
             json.put("authorId", userId);
-            // #########
             json.put("activityId", this.id);
-            // #########
             json.put("startedAt", this.startedAt);
             json.put("finishedAt", this.finishedAt);
             json.put("duration", this.duration);
         } catch (Exception e) {
             Log.e("saveActivityData", e.getMessage());
-            Toast toast = Toast.makeText(context, e.getMessage(), Toast.LENGTH_SHORT);
-            toast.show();
+            Toast.makeText(context, e.getMessage(), Toast.LENGTH_SHORT).show();
+            return;
         }
 
-        // for testing
-        String url = "http://10.0.2.2:3000/api/activity/save-activity";
-        //String url = "";
+        // make HTTP request
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, json,
             new Response.Listener<JSONObject>() {
                 @Override
                 public void onResponse(JSONObject response) {
                     try {
+                        // get json data from response
                         JSONObject data = response.getJSONObject("data");
+
+                        // if there is errors, show error message by toast
+                        String status = data.getString("status");
+                        if(status.equals("Error")) throw new Exception(data.getString("message"));
+
+                        JSONObject result = data.getJSONObject("result");
+
+                        // bundle activity data to pass next activity
+                        Bundle bundle = new Bundle();
+                        bundle.putInt("time", result.getInt("duration"));
+                        WorkoutResultFragment workoutResultFragment = new WorkoutResultFragment();
+                        workoutResultFragment.setArguments(bundle);
+
+                        // navigate to Workout Result Fragment
+                        Navigate.navigateToNextFragment(context, workoutResultFragment);
+
+                        Toast.makeText(context, "Activity data saved", Toast.LENGTH_SHORT).show();
                     } catch (Exception e) {
                         Log.e("onResponse", "" + e.getMessage());
-                        Toast toast = Toast.makeText(context, e.getMessage(), Toast.LENGTH_SHORT);
-                        toast.show();
+                        Toast.makeText(context, e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
 
                 }
@@ -125,15 +135,13 @@ public class Activity {
                 @Override
                 public void onErrorResponse(VolleyError error) {
                     Log.e("onErrorResponse", "" + error.getMessage());
-                    Toast toast = Toast.makeText(context, error.getMessage(), Toast.LENGTH_SHORT);
-                    toast.show();
+                    Toast.makeText(context, error.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             }
         );
 
-        // create request queue
+        // create request queue and add http request to the queue
         RequestQueue requestQueue = Volley.newRequestQueue(context);
-        // add http request to the request queue
         // execute the queue
         requestQueue.add(jsonObjectRequest);
     }
