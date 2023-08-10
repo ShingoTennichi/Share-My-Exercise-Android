@@ -31,8 +31,7 @@ public class RecyclerAdapterExercise extends RecyclerView.Adapter<RecyclerAdapte
     @NonNull
     @Override
     public RecyclerAdapterExercise.ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType) {
-        View view = LayoutInflater.from(context)
-            .inflate(R.layout.main_exercise_layout, viewGroup, false);
+        View view = LayoutInflater.from(context).inflate(R.layout.main_exercise_layout, viewGroup, false);
         ViewHolder viewHolder = new ViewHolder(view);
         return viewHolder;
     }
@@ -50,8 +49,10 @@ public class RecyclerAdapterExercise extends RecyclerView.Adapter<RecyclerAdapte
             public void onClick(View v) {
                 // pass exercise info to the next fragment
                 Bundle bundle = new Bundle();
+
                 bundle.putInt("id", exercise.getId());
                 bundle.putInt("image", exercise.getImageLarge());
+                bundle.putInt("gif", exercise.getGif());
                 bundle.putString("name", exercise.getName());
                 bundle.putString("instruction", exercise.getInstruction());
                 ExerciseFragment exerciseFragment = new ExerciseFragment();
@@ -84,13 +85,17 @@ public class RecyclerAdapterExercise extends RecyclerView.Adapter<RecyclerAdapte
     private void initExerciseData() {
         exercises = new ArrayList<>();
         int[] smallImages = {
-                R.drawable.sit_up_crop, R.drawable.push_up_crop, R.drawable.plank_crop,
-                R.drawable.squat_crop, R.drawable.lunge_crop, R.drawable.jogging_crop
+            R.drawable.sit_up_crop, R.drawable.push_up_crop, R.drawable.plank_crop,
+            R.drawable.squat_crop, R.drawable.lunge_crop, R.drawable.jogging_crop
         };
 
         int[] largeImages = {
-                R.drawable.sit_up, R.drawable.push_up, R.drawable.plank,
-                R.drawable.squat, R.drawable.lunge, R.drawable.jogging
+            R.drawable.sit_up, R.drawable.push_up, R.drawable.plank,
+            R.drawable.squat, R.drawable.lunge, R.drawable.jogging
+        };
+        int[] gifs = {
+          R.drawable.sit_up_gif, R.drawable.push_up_gif, R.drawable.plank_gif,
+            R.drawable.squat_gif, R.drawable.lunge_gif, R.drawable.jogging_gif
         };
         String[] names = {
             "Sit-up", "Push-up", "Plank", "Squat", "Lunge", "Jogging"
@@ -102,7 +107,7 @@ public class RecyclerAdapterExercise extends RecyclerView.Adapter<RecyclerAdapte
 
         for(int index = 0; index < names.length; index++) {
             Exercise exercise = new Exercise(
-                index+1, smallImages[index], largeImages[index], names[index], instructions[index]
+                index+1, smallImages[index], largeImages[index], gifs[index] , names[index], instructions[index]
             );
             exercises.add(exercise);
         }
