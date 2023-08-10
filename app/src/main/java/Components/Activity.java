@@ -22,18 +22,17 @@ import java.time.LocalDateTime;
 public class Activity implements SaveActivityInterface {
 
     private int id;
+    private String exerciseName;
     private LocalDateTime startedAt;
     private LocalDateTime restartedAt;
     private LocalDateTime finishedAt;
     private int duration;
 
-    public Activity(int id) {
-        this.id = id;
-    }
-
     public int getId() {
         return id;
     }
+
+    public String getExerciseName() { return exerciseName; }
 
     public LocalDateTime getStartedAt() {
         return startedAt;
@@ -54,6 +53,8 @@ public class Activity implements SaveActivityInterface {
     public void setId(int id) {
         this.id = id;
     }
+
+    public void setExerciseName(String exerciseName) { this.exerciseName = exerciseName; }
 
     public void setStartedAt(LocalDateTime startedAt) {
         this.startedAt = startedAt;

@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
             if (itemId == R.id.bt_nav_home) {
                 Navigate.navigateToNextFragment(MainActivity.this, new MainFragment());
             } else if (itemId == R.id.bt_nav_post) {
-                Navigate.navigateToNextFragment(MainActivity.this, new PostFragment());
+                Navigate.navigateToNextFragment(MainActivity.this, new ShareFragment());
             } else if (itemId == R.id.bt_nav_share) {
                 Navigate.navigateToNextFragment(MainActivity.this, new NewPostFragment());
             } else if (itemId == R.id.bt_nav_profile) {

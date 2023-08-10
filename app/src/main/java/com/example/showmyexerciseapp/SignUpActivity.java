@@ -53,25 +53,21 @@ public class SignUpActivity extends AppCompatActivity {
         });
     }
 
-    public void createAccount(View v) throws Exception {
-        // get user input
+    public void signUp(View v) {
         String fName = textInputFName.getText().toString();
         String lName = textInputLName.getText().toString();
         String email = textInputEmail.getText().toString();
         String password = textInputPassword.getText().toString();
         String confirmPassword = textInputConfirmPassword.getText().toString();
 
-        //
         try {
             if(Validation.signUpValidation(fName, lName, email, password, confirmPassword))  {
-                // connect to db to create account
                 postUserData(fName,lName,email,password);
             } else {
                 throw new Exception("Fill all areas and make sure password");
             }
         } catch(Exception e) {
-            Log.e("createAccount", e.getMessage());
-            Toast toast = Toast.makeText(SignUpActivity.this, e.getMessage(), Toast.LENGTH_LONG);
+            Toast.makeText(SignUpActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -81,7 +77,6 @@ public class SignUpActivity extends AppCompatActivity {
         String requestPath = "/api/user/sign-up";
         String url = BuildConfig.BASE_URL + requestPath;
 
-        // create a json object for request body
         JSONObject json = new JSONObject();
         try {
             json.put("firstName", fName);
@@ -89,33 +84,26 @@ public class SignUpActivity extends AppCompatActivity {
             json.put("email", email);
             json.put("password", password);
         } catch (Exception e) {
-            Log.e("postUserData: ", e.getMessage());
             throw new Exception(e.getMessage());
         }
 
-        // make HTTP request
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, json,
             new Response.Listener<JSONObject>() {
                 @Override
                 public void onResponse(JSONObject response) {
                     try {
-                        // get json data from response
                         JSONObject data  = response.getJSONObject("data");
-
-                        // if there is errors, show error message by toast
                         String status = data.getString("status");
-                        if(status.equals("Error")) throw new Exception(data.getString("message"));
+                        if(status.equals("error")) throw new Exception("The Email is already taken");
 
                         // save userId for later use
                         JSONObject userData = data.getJSONObject("result");
                         int userId = userData.getInt("id");
                         saveUserId(userId);
 
-                        // navigate to main activity
                         Navigate.navigateToNextActivity(SignUpActivity.this, MainActivity.class);
-                        Toast.makeText(SignUpActivity.this, "Successfully signed up", Toast.LENGTH_SHORT);
+                        Toast.makeText(SignUpActivity.this, "Successfully signed up", Toast.LENGTH_SHORT).show();
                     } catch (Exception e) {
-                        Log.e("onResponse: ", e.getMessage());
                         Toast.makeText(SignUpActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 }
@@ -123,21 +111,16 @@ public class SignUpActivity extends AppCompatActivity {
             new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError error) {
-                    // show error source by toast
-                    Log.e("onErrorResponse", error.getMessage());
                     Toast.makeText(SignUpActivity.this, error.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             }
         );
 
-        // create request queue and add http request to the request queue
         RequestQueue requestQueue = Volley.newRequestQueue(SignUpActivity.this);
-        // execute the queue
         requestQueue.add(jsonObjectRequest);
     }
 
     private void saveUserId(int userId) {
-        // save user data to the preference file
         SharedPreferences sharedPreferences = getSharedPreferences("config_file", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putInt("userId", userId);

@@ -28,9 +28,7 @@ public class MainFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_main, container, false);
     }
 
@@ -39,7 +37,6 @@ public class MainFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         context = getContext();
 
-        // display exercises
         recyclerView = view.findViewById(R.id.main_exercises);
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
         recyclerView.setHasFixedSize(true);

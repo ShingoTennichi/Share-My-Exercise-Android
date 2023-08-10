@@ -33,17 +33,16 @@ import com.google.firebase.storage.UploadTask;
 
 import java.util.UUID;
 
+import Components.CustomFirebase;
 import Components.Post;
 
 public class NewPostFragment extends Fragment {
 
-
+    Context context;
     TextView etPostText;
     ImageView uploadedImage;
     Button postBtn;
     Uri imgUri;
-    FirebaseStorage firebaseStorage;
-    StorageReference storageReference;
     ActivityResultLauncher<Intent> activityResultLauncher;
 
     public NewPostFragment() {
@@ -65,7 +64,7 @@ public class NewPostFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
+        context = getContext();
         etPostText = view.findViewById(R.id.etPostText);
         uploadedImage = view.findViewById(R.id.upload_image);
         postBtn = view.findViewById(R.id.post_btn);
@@ -92,7 +91,7 @@ public class NewPostFragment extends Fragment {
                         imgUri = data.getData();
                         uploadedImage.setImageURI(imgUri);
                     } else {
-                        Toast.makeText(getContext(), "Image not selected", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, "Image not selected", Toast.LENGTH_SHORT).show();
                     }
                 }
             }
@@ -105,44 +104,27 @@ public class NewPostFragment extends Fragment {
 
                 Post post = new Post();
                 // set post data
-                SharedPreferences sharedPreferences = getContext().getSharedPreferences("config_file", Context.MODE_PRIVATE);
+                SharedPreferences sharedPreferences = context.getSharedPreferences("config_file", Context.MODE_PRIVATE);
                 post.setAuthorId(sharedPreferences.getInt("userId", -1));
                 post.setText(etPostText.getText().toString());
 
                 // if an image is set, store to firebase storage
                 if(imgUri != null) {
-                    // set image
+                    // use uuid as image name
                     String uuid = UUID.randomUUID().toString();
-                    Log.d("Image UUID", "" + uuid);
                     post.setImgUrl(uuid);
-                    Log.d("Image UUID", "" + post.getImgUrl());
-                    // init firebase connection setting
-                    firebaseStorage = FirebaseStorage.getInstance();
-                    storageReference = firebaseStorage.getReference();
 
-                    // set mata data to send request
-                    StorageReference imgRef = storageReference.child("images/" + post.getImgUrl());
-                    imgRef.putFile(imgUri)
-                        .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                            @Override
-                            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                Toast.makeText(getContext(), "success", Toast.LENGTH_SHORT).show();
-                            }
-                        })
-                        .addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Toast.makeText(getContext(), "error", Toast.LENGTH_SHORT).show();
-                            }
-                        });
+                    CustomFirebase customFirebase = new CustomFirebase(context);
+                    customFirebase.uploadImage(imgUri, post.getImgUrl());
+
                 } else if(post.getText().equals("")) {
                     // process end due to no input
-                    Toast.makeText(getContext(), "text or image is required", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "text or image is required", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
                 // save post data to database
-                post.savePost(getContext());
+                post.savePost(context);
             }
         });
     }

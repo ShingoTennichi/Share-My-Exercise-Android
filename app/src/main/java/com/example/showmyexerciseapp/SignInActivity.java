@@ -38,32 +38,31 @@ public class SignInActivity extends AppCompatActivity {
         textInputPassword = findViewById(R.id.sign_in_password);
         backBtn = findViewById(R.id.btn_back_SI);
 
-        backBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Navigate.navigateToNextActivity(SignInActivity.this, GetStartedActivity.class);
-                finish();
+        backBtn.setOnClickListener(
+            new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Navigate.navigateToNextActivity(SignInActivity.this, GetStartedActivity.class);
+                    finish();
+                }
             }
-        });
+        );
     }
 
-    public void SignIn(View v) {
+    public void signIn(View v) {
         Toast.makeText(SignInActivity.this, "Logging in...", Toast.LENGTH_SHORT).show();
         String email = textInputEmail.getText().toString();
         String password = textInputPassword.getText().toString();
 
-        // check input
         if(!Validation.isValidSignInInput(email, password)) {
             Toast.makeText(SignInActivity.this, "Fill all input areas", Toast.LENGTH_SHORT).show();
             return;
         };
 
-        // HTTP request
         // make sure Build Variant is debug or release
         String requestPath = "/api/user/sign-in";
         String url = BuildConfig.BASE_URL + requestPath;
 
-        // create a json object for request body
         JSONObject json = new JSONObject();
         try {
             json.put("email", email);
@@ -78,23 +77,19 @@ public class SignInActivity extends AppCompatActivity {
                 @Override
                 public void onResponse(JSONObject response) {
                     try {
-                        // get json data from response
                         JSONObject data = response.getJSONObject("data");
 
-                        // if there is errors, show error message by toast
                         String status = data.getString("status");
-                        if(status.equals("Error")) throw new Exception(data.getString("message"));
+                        if(status.equals("error")) throw new Exception("Make sure email and password are correct");
 
                         // save userId for later use
                         JSONObject result = data.getJSONObject("result");
                         int userId = result.getInt("id");
                         saveUserId(userId);
 
-                        // navigate to main activity
                         Navigate.navigateToNextActivity(SignInActivity.this, MainActivity.class);
                         finish();
                     } catch (Exception e) {
-                        Log.e("onResponse", "" + e.getMessage());
                         Toast.makeText(SignInActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 }
@@ -102,17 +97,12 @@ public class SignInActivity extends AppCompatActivity {
             new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError error) {
-                    // show error source by toast
-                    Log.e("onErrorResponse", ""+error.getMessage());
                     Toast.makeText(SignInActivity.this, error.getMessage(), Toast.LENGTH_SHORT).show();
-
                 }
             }
         );
 
-        // create request queue and add request to the queue
         RequestQueue requestQueue = Volley.newRequestQueue(SignInActivity.this);
-        // execute the queue
         requestQueue.add(jsonObjectRequest);
     }
 
