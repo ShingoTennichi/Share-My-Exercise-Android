@@ -15,15 +15,23 @@ import com.example.showmyexerciseapp.MainFragment;
 
 import org.json.JSONObject;
 
-public class Post implements SavePostInterface {
+import java.time.LocalDate;
+import java.util.Date;
+
+public class Post implements SavePostInterface, UpdateLikeInterface {
+    private int postId;
     private int authorId;
+    private String author;
     private String imgUrl;
     private String text;
+    private int numberOfComment;
+    private int like;
+    private String createdAt;
 
+    public int getPostId() { return postId; }
 
-    public int getAuthorId() {
-        return authorId;
-    }
+    public int getAuthorId() { return authorId; }
+    public String getAuthor() { return author; }
 
     public String getImgUrl() {
         return imgUrl;
@@ -33,9 +41,19 @@ public class Post implements SavePostInterface {
         return text;
     }
 
+    public int getNumberOfComment() { return numberOfComment; }
+
+    public int getLike() { return like; }
+
+    public String getCreatedAt() { return createdAt; }
+
+    public void setPostId(int postId) { this.postId = postId; }
+
     public void setAuthorId(int authorId) {
         this.authorId = authorId;
     }
+
+    public void setAuthor(String author) { this.author = author; }
 
     public void setImgUrl(String imgUrl) {
         this.imgUrl = imgUrl;
@@ -44,6 +62,12 @@ public class Post implements SavePostInterface {
     public void setText(String text) {
         this.text = text;
     }
+
+    public void setNumberOfComment(int numberOfComment) { this.numberOfComment = numberOfComment; }
+
+    public void setLike(int like) { this.like = like; }
+
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
 
     public void savePost(Context context) {
         // save post data as json object
@@ -87,6 +111,46 @@ public class Post implements SavePostInterface {
                 @Override
                 public void onErrorResponse(VolleyError error) {
                     Toast.makeText(context, "Server error: Try later", Toast.LENGTH_SHORT).show();
+                }
+            }
+        );
+
+        // execute the request
+        RequestQueue requestQueue = Volley.newRequestQueue(context);
+        requestQueue.add(jsonObjectRequest);
+        Toast.makeText(context, "posting...", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void updateLike(Context context) {
+        JSONObject json = new JSONObject();
+        try {
+            json.put("id", this.postId);
+            json.put("like", this.like);
+        } catch (Exception e) {
+            Log.e("createJson", "error");
+        }
+        String requestPath = "/api/post/update/like";
+
+        final String url = BuildConfig.BASE_URL + requestPath;
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.PUT, url, json,
+            new Response.Listener<JSONObject>() {
+                @Override
+                public void onResponse(JSONObject response) {
+                    try {
+                        JSONObject data = response.getJSONObject("data");
+                        if(data.getString("status") == "success") {
+                            Log.e("success", "good request");
+                        }
+                    } catch (Exception e) {
+                        Log.e("error", "bad request");
+                    }
+                }
+            },
+            new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Log.e("error", "bad request2");
                 }
             }
         );
