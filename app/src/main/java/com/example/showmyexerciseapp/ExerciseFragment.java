@@ -1,11 +1,13 @@
 package com.example.showmyexerciseapp;
 
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,10 +15,21 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.net.URL;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
 import Components.Activity;
+import Components.SavePostInterface;
+import pl.droidsonroids.gif.GifImageView;
 
 public class ExerciseFragment extends Fragment {
 
@@ -28,6 +41,7 @@ public class ExerciseFragment extends Fragment {
     Button doneBtn;
     Button pauseBtn;
     Activity activity;
+    GifImageView gifImageView ;
 
     public ExerciseFragment() {
         // Required empty public constructor
@@ -55,16 +69,20 @@ public class ExerciseFragment extends Fragment {
         startBtn = view.findViewById(R.id.start_exercise_btn);
         doneBtn = view.findViewById(R.id.start_exercise_done_btn);
         pauseBtn = view.findViewById(R.id.start_exercise_pause_btn);
+        gifImageView = view.findViewById(R.id.gifImageView);
 
         // get values from previous activity
         Bundle bundle = getArguments();
 
         // init activity for user activity
-        activity = new Activity(bundle.getInt("id"));
+        activity = new Activity();
+        activity.setId(bundle.getInt("id"));
+        activity.setExerciseName(bundle.getString("name"));
 
         image.setImageResource(bundle.getInt("image"));
-        name.setText(bundle.getString("name"));
+        name.setText(activity.getExerciseName());
         instruction.setText(bundle.getString("instruction"));
+        gifImageView.setImageResource(bundle.getInt("gif"));
 
         startBtn.setOnClickListener(new View.OnClickListener() {
             @Override

@@ -4,13 +4,15 @@ public class Exercise {
     private int id;
     private int imageSmall;
     private int imageLarge;
+    private int gif;
     private String name;
     private String instruction;
 
-    public Exercise(int id, int imageSmall, int imageLarge, String name, String instruction) {
+    public Exercise(int id, int imageSmall, int imageLarge, int gif, String name, String instruction) {
         this.id = id;
         this.imageSmall = imageSmall;
         this.imageLarge = imageLarge;
+        this.gif = gif;
         this.name = name;
         this.instruction = instruction;
     }
@@ -26,6 +28,8 @@ public class Exercise {
     public int getImageLarge() {
         return imageLarge;
     }
+
+    public int getGif() { return gif; }
 
     public String getName() {
         return name;
@@ -46,6 +50,8 @@ public class Exercise {
     public void setImageLarge(int imageLarge) {
         this.imageLarge = imageLarge;
     }
+
+    public void setGif(int gif) { this.gif = gif; }
 
     public void setName(String name) {
         this.name = name;
